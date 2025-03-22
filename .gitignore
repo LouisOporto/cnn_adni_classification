@@ -1,0 +1,3 @@
+env/
+adni_dataset/
+*.csv
