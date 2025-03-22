@@ -37,11 +37,8 @@ class NiftiDataset(Dataset):
         img = (img - np.min(img)) / (np.max(img) - np.min(img))  # Min-max normalization
         
         # Convert to 3D single-channel format (ResNet expects 3-channel input)
-        # print(img)
-        img = np.stack([img] * 3, axis=-1)  # Convert grayscale to RGB
-        # print(img)
-        img = np.transpose(img, [2, 0, 1]) # Change to (C, H, W)
-        # img = np.transpose(img, (2, 0, 1))  # Change to (C, H, W)
+        img = np.stack(img * 3, axis=-1)  # Convert grayscale to RGB
+        img = np.transpose(img, (2, 1, 0)) # Change to (C, H, W)
 
         if self.transform:
             img = self.transform(torch.tensor(img))
