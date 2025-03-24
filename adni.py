@@ -5,7 +5,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import models, transforms, datasets
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, random_split
+from PIL import Image
 
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -23,7 +24,7 @@ class NiftiDataset(Dataset):
             for file in files:
                 if file.endswith(".nii"):
                     nii_files.append(os.path.join(subdir, file))
-
+        print(f"Loaded {len(nii_files)} .nii files from {folder_path}\n")
         return nii_files
 
     def __len__(self):
@@ -41,7 +42,7 @@ class NiftiDataset(Dataset):
         img = np.transpose(img, (2, 1, 0)) # Change to (C, H, W)
 
         if self.transform:
-            img = self.transform(torch.tensor(img))
+            img = self.transform(Image.fromarray(img.astype('uint8'), 'RGB'))
 
         label = self.get_label_from_filename(self.images[idx])  # Implement a function to map filenames to labels
         return img, label
@@ -65,8 +66,12 @@ transform = transforms.Compose([
 
 # Load datasets
 print("Reading NiftiDataset")
-train_dataset = NiftiDataset(image_dir=".\\adni_dataset\\ADNI", transform=transform)
-val_dataset = NiftiDataset(image_dir=".\\adni_dataset\\ADNI", transform=transform)
+full_dataset = NiftiDataset(image_dir=".\\adni_dataset\\ADNI", transform=transform)
+
+train_size = int(0.8 * len(full_dataset))
+test_size = len(full_dataset) - train_size
+
+train_dataset, val_dataset = random_split(full_dataset, [train_size, test_size])
 
 print("Loading dataset with DataLoader")
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
@@ -76,7 +81,7 @@ val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
 class AlzheimerResNet(nn.Module):
     def __init__(self, num_classes=3):
         super(AlzheimerResNet, self).__init__()
-        self.model = models.resnet50(pretrained=True)
+        self.model = models.resnet50(weights="ResNet50_Weights.DEFAULT")
         num_ftrs = self.model.fc.in_features
         self.model.fc = nn.Linear(num_ftrs, num_classes)  # Modify the output layer
 
