@@ -1,5 +1,4 @@
-torch
-torchvision
+# torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
 nibabel
 ipykernel
 matplotlib
