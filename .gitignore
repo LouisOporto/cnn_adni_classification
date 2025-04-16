@@ -1,3 +1,4 @@
 env/
 ADNI/
 *.csv
+*.pth
